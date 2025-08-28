@@ -9,9 +9,10 @@ import css from './NoteList.module.css';
 
 interface NoteListProps {
   notes: Note[];
+  onEdit?: (note: Note) => void; // Додаємо onEdit
 }
 
-const NoteList = ({ notes }: NoteListProps) => {
+const NoteList = ({ notes, onEdit }: NoteListProps) => {
   const queryClient = useQueryClient();
 
   const { mutate, isPending } = useMutation({
@@ -21,9 +22,9 @@ const NoteList = ({ notes }: NoteListProps) => {
     },
   });
 
-const handleDelete = (id: number) => {
-  mutate(id.toString());
-};
+  const handleDelete = (id: number | string) => {
+    mutate(id.toString());
+  };
 
   return (
     <ul className={css.list}>
@@ -38,6 +39,14 @@ const handleDelete = (id: number) => {
               <span className={css.tag}>{note.tag}</span>
               <div className={css.actions}>
                 <Link href={`/notes/${note.id}`}>View details</Link>
+                {onEdit && (
+                  <button
+                    className={css.button}
+                    onClick={() => onEdit(note)}
+                  >
+                    Edit
+                  </button>
+                )}
                 <button
                   className={css.button}
                   onClick={() => handleDelete(note.id)}
