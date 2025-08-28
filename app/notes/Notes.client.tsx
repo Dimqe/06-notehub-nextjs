@@ -14,8 +14,7 @@ export default function NotesClient() {
 
   const { data, isLoading, error } = useQuery({
     queryKey: ['notes', { q: debouncedSearch }],
-    queryFn: () => debouncedSearch.trim() === '' ? Promise.resolve({ notes: [], totalPages: 1 }) : fetchNotes({ search: debouncedSearch }),
-    enabled: debouncedSearch.trim() !== '',
+    queryFn: () => fetchNotes({ search: debouncedSearch }),
   });
 
   if (isLoading) return <p>Loading, please wait...</p>;
