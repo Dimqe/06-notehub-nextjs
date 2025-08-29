@@ -1,10 +1,12 @@
 "use client";
+
 import { useQuery } from "@tanstack/react-query";
 import { fetchNotes } from "@/lib/api";
 import NoteList from "@/components/NoteList/NoteList";
 import SearchBox from "@/components/SearchBox/SearchBox";
 import Modal from "@/components/Modal/Modal";
 import NoteForm from "@/components/NoteForm/NoteForm";
+import Pagination from "@/components/Pagination/Pagination";
 import { useState, useEffect } from "react";
 import { useDebounce } from "use-debounce";
 import css from "./NotesPage.module.css";
@@ -32,9 +34,6 @@ export default function NotesClient() {
   const openNewNote = () => setIsModalOpen(true);
   const closeModal = () => setIsModalOpen(false);
 
-  const handlePrev = () => setPage((p) => Math.max(1, p - 1));
-  const handleNext = () => setPage((p) => Math.min(totalPages, p + 1));
-
   if (isLoading) return <p>Loading, please wait...</p>;
   if (error) return <p>Could not fetch the list of notes.</p>;
 
@@ -49,21 +48,13 @@ export default function NotesClient() {
 
       <NoteList notes={notes} />
 
-      <div className={css.pagination}>
-        <button type="button" onClick={handlePrev} disabled={page <= 1}>
-          Prev
-        </button>
-        <span className={css.pageInfo}>
-          Page {page} {totalPages > 1 ? `of ${totalPages}` : ""}
-        </span>
-        <button
-          type="button"
-          onClick={handleNext}
-          disabled={page >= totalPages}
-        >
-          Next
-        </button>
-      </div>
+      {totalPages > 1 && (
+        <Pagination
+          totalPages={totalPages}
+          page={page}
+          onPageChange={setPage}
+        />
+      )}
 
       {isModalOpen && (
         <Modal onClose={closeModal}>
