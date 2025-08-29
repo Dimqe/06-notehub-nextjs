@@ -1,5 +1,5 @@
 "use client";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { fetchNotes } from "@/lib/api";
 import NoteList from "@/components/NoteList/NoteList";
 import SearchBox from "@/components/SearchBox/SearchBox";
@@ -8,47 +8,29 @@ import NoteForm from "@/components/NoteForm/NoteForm";
 import { useState, useEffect } from "react";
 import { useDebounce } from "use-debounce";
 import css from "./NotesPage.module.css";
-import type { Note } from "@/types/note";
 
 export default function NotesClient() {
   const [search, setSearch] = useState("");
   const [debouncedSearch] = useDebounce(search, 400);
   const [page, setPage] = useState(1);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingNote, setEditingNote] = useState<Note | null>(null);
-  const queryClient = useQueryClient();
 
-  
   useEffect(() => {
     setPage(1);
   }, [debouncedSearch]);
 
-  const { data, isLoading, error, isFetching } = useQuery({
+  const { data, isLoading, error } = useQuery({
     queryKey: ["notes", { q: debouncedSearch, page }],
     queryFn: () => fetchNotes({ search: debouncedSearch, page }),
     staleTime: 1000 * 60,
-    placeholderData: (prev) => prev, 
+    placeholderData: (prev) => prev,
   });
 
   const notes = data?.notes ?? [];
   const totalPages = data?.totalPages ?? 1;
 
-  const openNewNote = () => {
-    setEditingNote(null);
-    setIsModalOpen(true);
-  };
-
-  const openEditNote = (note: Note) => {
-    setEditingNote(note);
-    setIsModalOpen(true);
-  };
-
+  const openNewNote = () => setIsModalOpen(true);
   const closeModal = () => setIsModalOpen(false);
-
-  const handleNoteSaved = async () => {
-    closeModal();
-    await queryClient.invalidateQueries({ queryKey: ["notes"] });
-  };
 
   const handlePrev = () => setPage((p) => Math.max(1, p - 1));
   const handleNext = () => setPage((p) => Math.min(totalPages, p + 1));
@@ -65,7 +47,7 @@ export default function NotesClient() {
         </button>
       </div>
 
-      <NoteList notes={notes} onEdit={openEditNote} />
+      <NoteList notes={notes} />
 
       <div className={css.pagination}>
         <button type="button" onClick={handlePrev} disabled={page <= 1}>
@@ -85,11 +67,7 @@ export default function NotesClient() {
 
       {isModalOpen && (
         <Modal onClose={closeModal}>
-          <NoteForm
-            note={editingNote ?? undefined}
-            onSuccess={handleNoteSaved}
-            onClose={closeModal}
-          />
+          <NoteForm onClose={closeModal} />
         </Modal>
       )}
     </div>

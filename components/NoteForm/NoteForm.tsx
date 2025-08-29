@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { Formik, Form, Field, ErrorMessage } from 'formik';
 import type { FormikHelpers } from 'formik';
 import * as Yup from 'yup';
@@ -30,6 +30,7 @@ const validationSchema = Yup.object({
 
 const NoteForm = ({ onClose }: NoteFormProps) => {
   const queryClient = useQueryClient();
+  const titleRef = useRef<HTMLInputElement>(null);
 
   const mutation = useMutation({
     mutationFn: createNote,
@@ -38,6 +39,10 @@ const NoteForm = ({ onClose }: NoteFormProps) => {
       onClose();
     },
   });
+
+  useEffect(() => {
+    titleRef.current?.focus();
+  }, []);
 
   const initialValues: NoteFormValues = {
     title: '',
@@ -49,8 +54,12 @@ const NoteForm = ({ onClose }: NoteFormProps) => {
     values: NoteFormValues,
     { resetForm }: FormikHelpers<NoteFormValues>
   ) => {
-    await mutation.mutateAsync(values);
-    resetForm();
+    try {
+      await mutation.mutateAsync(values);
+      resetForm();
+    } catch (error) {
+      console.error(error);
+    }
   };
 
   return (
@@ -59,10 +68,16 @@ const NoteForm = ({ onClose }: NoteFormProps) => {
       validationSchema={validationSchema}
       onSubmit={handleSubmit}
     >
-      <Form className={css.form}>
+      <Form className={css.form} aria-label="Create a new note">
         <div className={css.formGroup}>
           <label htmlFor="title">Title</label>
-          <Field id="title" name="title" className={css.input} />
+          <Field
+            id="title"
+            name="title"
+            innerRef={titleRef}
+            className={css.input}
+            aria-required="true"
+          />
           <ErrorMessage name="title" component="span" className={css.error} />
         </div>
 
@@ -90,8 +105,19 @@ const NoteForm = ({ onClose }: NoteFormProps) => {
           <ErrorMessage name="tag" component="span" className={css.error} />
         </div>
 
+        {mutation.isError && (
+          <div className={css.error}>
+            Failed to create note. Please try again.
+          </div>
+        )}
+
         <div className={css.actions}>
-          <button type="button" className={css.cancelButton} onClick={onClose}>
+          <button
+            type="button"
+            className={css.cancelButton}
+            onClick={onClose}
+            disabled={mutation.isPending}
+          >
             Cancel
           </button>
           <button

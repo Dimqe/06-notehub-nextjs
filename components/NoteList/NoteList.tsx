@@ -9,7 +9,7 @@ import css from './NoteList.module.css';
 
 interface NoteListProps {
   notes: Note[];
-  onEdit?: (note: Note) => void; // Додаємо onEdit
+  onEdit?: (note: Note) => void; 
 }
 
 const NoteList = ({ notes, onEdit }: NoteListProps) => {
