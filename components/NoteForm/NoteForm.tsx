@@ -6,14 +6,12 @@ import type { FormikHelpers } from 'formik';
 import * as Yup from 'yup';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { createNote } from '@/lib/api';
-import type { Note, NoteTag } from '@/types/note';
+import type { NoteTag } from '@/types/note';
 
 import css from './NoteForm.module.css';
 
 interface NoteFormProps {
   onClose: () => void;
-  onSuccess: () => Promise<void>;
-  note?: Note; 
 }
 
 interface NoteFormValues {
@@ -30,21 +28,21 @@ const validationSchema = Yup.object({
     .required('Tag is required'),
 });
 
-const NoteForm = ({ onClose, onSuccess, note }: NoteFormProps) => {
+const NoteForm = ({ onClose }: NoteFormProps) => {
   const queryClient = useQueryClient();
 
   const mutation = useMutation({
     mutationFn: createNote,
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['notes'] });
-      onSuccess();
+      onClose();
     },
   });
 
   const initialValues: NoteFormValues = {
-    title: note?.title ?? '',
-    content: note?.content ?? '',
-    tag: note?.tag ?? 'Todo',
+    title: '',
+    content: '',
+    tag: 'Todo',
   };
 
   const handleSubmit = async (
@@ -60,7 +58,6 @@ const NoteForm = ({ onClose, onSuccess, note }: NoteFormProps) => {
       initialValues={initialValues}
       validationSchema={validationSchema}
       onSubmit={handleSubmit}
-      enableReinitialize
     >
       <Form className={css.form}>
         <div className={css.formGroup}>
